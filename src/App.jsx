@@ -11,15 +11,27 @@ function App() {
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
 
-  const [formDataContact, setFormDataContact] = useState({
-    firstName: "Nguyễn Lê",
-    lastName: "Hữu",
-    dob: "2000-11-02",
-    phone: "+84354187011",
-    cccd: "123456789101",
-    address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
-    email: "nguyenlehuu1102@gmail.com",
-    gender: "Nam",
+  // const [formDataContact, setFormDataContact] = useState({
+  //   firstName: "Nguyễn Lê",
+  //   lastName: "Hữu",
+  //   dob: "2000-11-02",
+  //   phone: "+84354187011",
+  //   cccd: "123456789101",
+  //   address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
+  //   email: "nguyenlehuu1102@gmail.com",
+  //   gender: "Nam",
+  //   area: "Việt Nam",
+  // });
+
+    const [formDataContact, setFormDataContact] = useState({
+    firstName: "",
+    lastName: "",
+    dob: "",
+    phone: "",
+    cccd: "",
+    address: "",
+    email: "",
+    gender: "",
     area: "Việt Nam",
   });
 

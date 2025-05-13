@@ -4,6 +4,8 @@ import "../App.css";
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
 import { serviceData } from "../data/dataService";
+import NFTBanner from "../assets/images/NFTBanner.png";
+import NFTLogo from "../assets/images/NFTLogo.jpg";
 
 const ServiceFormRegister = ({
   onChange,
@@ -136,7 +138,7 @@ const ServiceFormRegister = ({
   return (
     <div className="">
       <img
-        src="../assets/images/NFTBanner.png"
+        src={NFTBanner}
         className="img-fluid mb-4 rounded"
         alt="NFT Capital Group Banner"
         style={{ width: "100%" }}
@@ -195,7 +197,7 @@ const ServiceFormRegister = ({
             >
               <td style={{ flex: "0 0 160px", padding: "10px" }}>
                 <img
-                  src="../assets/images/NFTLogo.jpg"
+                  src={NFTLogo}
                   alt="Logo"
                   style={{
                     width: "100%",

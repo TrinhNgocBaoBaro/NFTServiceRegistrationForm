@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
+import NFTBanner from "../assets/images/NFTBanner.png";
 
 const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
   const [quantities, setQuantities] = useState(() =>
@@ -32,7 +33,7 @@ const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
   return (
     <div>
       <img
-        src="../assets/images/NFTBanner.png"
+        src={NFTBanner}
         className="img-fluid mb-4 rounded"
         alt="NFT Capital Group Banner"
         style={{ width: "100%" }}
