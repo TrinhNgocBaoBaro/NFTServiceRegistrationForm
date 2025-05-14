@@ -1,47 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+
 import ServiceFormRegister from "./components/ServiceFormRegister";
 import ServicePackCheckout from "./components/ServicePackCheckout";
+import ConsultationForm from "./components/ConsultationForm";
+import Home from "./components/Home";
 
-function App() {
+function ServiceFormRegisterFlow() {
   const [tab, setTab] = useState(0);
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
 
-  // const [formDataContact, setFormDataContact] = useState({
-  //   firstName: "Nguyễn Lê",
-  //   lastName: "Hữu",
-  //   dob: "2000-11-02",
-  //   phone: "+84354187011",
-  //   cccd: "123456789101",
-  //   address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
-  //   email: "nguyenlehuu1102@gmail.com",
-  //   gender: "Nam",
-  //   area: "Việt Nam",
-  // });
-
-    const [formDataContact, setFormDataContact] = useState({
-    firstName: "",
-    lastName: "",
-    dob: "",
-    phone: "",
-    cccd: "",
-    address: "",
-    email: "",
-    gender: "",
+  const [formDataContact, setFormDataContact] = useState({
+    firstName: "Nguyễn Lê",
+    lastName: "Hữu",
+    dob: "2000-11-02",
+    phone: "+84354187011",
+    cccd: "123456789101",
+    address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
+    email: "nguyenlehuu1102@gmail.com",
+    gender: "Nam",
     area: "Việt Nam",
   });
+
+  //   const [formDataContact, setFormDataContact] = useState({
+  //   firstName: "",
+  //   lastName: "",
+  //   dob: "",
+  //   phone: "",
+  //   cccd: "",
+  //   address: "",
+  //   email: "",
+  //   gender: "",
+  //   area: "Việt Nam",
+  // });
 
   useEffect(() => {
     console.log("Các dịch vụ: ", selectedServices);
   }, [selectedServices]);
 
-    useEffect(() => {
-      console.log("Form contact ở Cha: ", formDataContact);
-    }, [formDataContact]);
+  useEffect(() => {
+    console.log("Form contact ở Cha: ", formDataContact);
+  }, [formDataContact]);
 
   const fetchProductBySKU = async (sku) => {
     const encodedSKU = encodeURIComponent(`metadata['SKU']:'${sku}'`);
@@ -66,7 +70,7 @@ function App() {
         amount: item["Giá"] * 100,
         recurring: {
           interval: item.Recurring === "monthly" ? "month" : "",
-          interval_count: 5,
+          interval_count: 3,
         },
         product_data: {
           name: item["Tên gói"],
@@ -104,7 +108,7 @@ function App() {
   const createPaymentSession = async (lineItems, customerId) => {
     try {
       const response = await fetch(
-        "https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/create-payment",
+        "https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/create-payment-fb",
         {
           method: "POST",
           headers: {
@@ -113,6 +117,16 @@ function App() {
           body: JSON.stringify({
             line_items: lineItems,
             customer_id: customerId,
+            contact: {
+              full_name: formDataContact.firstName + formDataContact.lastName,
+              birthday: formDataContact.dob,
+              phone: formDataContact.phone,
+              citizen_identification: formDataContact.cccd,
+              address: formDataContact.address,
+              email: formDataContact.email,
+              gender: formDataContact.gender,
+              area: formDataContact.area,
+            },
           }),
         }
       );
@@ -141,7 +155,10 @@ function App() {
       const customerId = customerResponse.data;
       console.log("Customer id: ", customerId);
       const taskPromises = selectedServices.map((item) => ({
+        service_name: item["Tên gói"],
+        recurring: item.Recurring || "one_time",
         sku: item.SKU,
+        service_price: item["Giá"] === "P001" ? item["Giá"] : item["Giá"] * 100,
         quantity: item.quantity || 1,
         task:
           item.SKU === "P001"
@@ -152,14 +169,31 @@ function App() {
       const allResults = await Promise.all(taskPromises.map((t) => t.task));
       console.log("Kết quả theo đúng thứ tự:", allResults);
 
-      const lineItems = allResults.map((result, index) => ({
-        price:
+      // const lineItems = allResults.map((result, index) => ({
+      //   price:
+      //     typeof result.data === "string" ? result.data : result.data[0].id,
+      //   quantity: taskPromises[index].quantity,
+      // }));
+      // console.log("Line items: ", lineItems);
+
+      /////////////////////////////////////////////
+      const newLineItems = allResults.map((result, index) => ({
+        price_stripe_id:
           typeof result.data === "string" ? result.data : result.data[0].id,
         quantity: taskPromises[index].quantity,
+        price_hubspot: taskPromises[index].service_price,
+        sku: taskPromises[index].sku,
+        service_name: taskPromises[index].service_name,
+        recurring: taskPromises[index].recurring,
       }));
-      console.log("Line items: ", lineItems);
 
-      const paymentSession = await createPaymentSession(lineItems, customerId);
+      console.log("New line items: ", newLineItems);
+
+      ////////////////////////////////////////////////
+      const paymentSession = await createPaymentSession(
+        newLineItems,
+        customerId
+      );
 
       window.location.href = paymentSession.data.url;
     } catch (error) {
@@ -174,7 +208,6 @@ function App() {
     <>
       <div
         className="container mt-3 mb-5 container-main"
-        style={{ maxWidth: "900px" }}
       >
         {tab === 0 && (
           <>
@@ -286,8 +319,25 @@ function App() {
             </div>
           </>
         )}
+        {tab === 2 && (
+        <>
+            <ConsultationForm />
+        </>
+      )}
       </div>
     </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/dang-ky-dich-vu" element={<ServiceFormRegisterFlow />} />
+        <Route path="/dang-ky-tu-van" element={<ConsultationForm />} />
+        <Route path="*" element={<Home />} />
+      </Routes>
+    </Router>
   );
 }
 

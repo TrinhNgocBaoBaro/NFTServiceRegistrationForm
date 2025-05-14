@@ -89,13 +89,18 @@
 .container-main { 
   padding: 40px;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-  border-radius: 14px
+  border-radius: 14px;
+  max-width: 900px
 }
 
 @media (max-width: 575.98px) {
   .container-main {
     padding: 0px;
     box-shadow: none;
+  }
+
+  .form-consultation-container{
+ 
   }
 }
 
@@ -115,7 +120,6 @@
   box-shadow: none !important;
 }
 
-/* .PhoneInputInput:focus {
-  border: 0px solid #ffffff !important; 
+.form-consultation-container {
+}
 
-} */
