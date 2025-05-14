@@ -536,7 +536,7 @@ const ServiceFormRegister = ({
           <div className="mt-3">
             {" "}
             Chi tiết các gói / dịch vụ:{" "}
-            <a href="ServicePack.pdf" target="_blank" rel="noreferrer">
+            <a href="https://drive.google.com/file/d/1cOzMenOyJlirqYAMuIuYP-sXhu5z9CLG/view?usp=sharing" target="_blank" rel="noreferrer">
               ServicePack.pdf
             </a>
           </div>
