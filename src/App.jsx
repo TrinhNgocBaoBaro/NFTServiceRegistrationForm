@@ -15,29 +15,29 @@ function ServiceFormRegisterFlow() {
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
 
-  const [formDataContact, setFormDataContact] = useState({
-    firstName: "Nguyễn Lê",
-    lastName: "Hữu",
-    dob: "2000-11-02",
-    phone: "+84354187011",
-    cccd: "123456789101",
-    address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
-    email: "nguyenlehuu1102@gmail.com",
-    gender: "Nam",
-    area: "Việt Nam",
-  });
-
-  //   const [formDataContact, setFormDataContact] = useState({
-  //   firstName: "",
-  //   lastName: "",
-  //   dob: "",
-  //   phone: "",
-  //   cccd: "",
-  //   address: "",
-  //   email: "",
-  //   gender: "",
+  // const [formDataContact, setFormDataContact] = useState({
+  //   firstName: "Nguyễn Lê",
+  //   lastName: "Hữu",
+  //   dob: "2000-11-02",
+  //   phone: "+84354187011",
+  //   cccd: "123456789101",
+  //   address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
+  //   email: "nguyenlehuu1102@gmail.com",
+  //   gender: "Nam",
   //   area: "Việt Nam",
   // });
+
+    const [formDataContact, setFormDataContact] = useState({
+    firstName: "",
+    lastName: "",
+    dob: "",
+    phone: "",
+    cccd: "",
+    address: "",
+    email: "",
+    gender: "",
+    area: "Việt Nam",
+  });
 
   useEffect(() => {
     console.log("Các dịch vụ: ", selectedServices);
@@ -46,6 +46,11 @@ function ServiceFormRegisterFlow() {
   useEffect(() => {
     console.log("Form contact ở Cha: ", formDataContact);
   }, [formDataContact]);
+
+    const getAffiliateCode = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("fpr") || "";
+  };
 
   const fetchProductBySKU = async (sku) => {
     const encodedSKU = encodeURIComponent(`metadata['SKU']:'${sku}'`);
@@ -126,6 +131,8 @@ function ServiceFormRegisterFlow() {
               email: formDataContact.email,
               gender: formDataContact.gender,
               area: formDataContact.area,
+              affiliate_code: getAffiliateCode(),
+              is_contributor: "no"
             },
           }),
         }
