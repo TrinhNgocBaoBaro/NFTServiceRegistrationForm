@@ -110,7 +110,35 @@ function ServiceFormRegisterFlow() {
     return data;
   };
 
+    const searchCustomerByEmail = async (email) => {
+    const response = await fetch(
+      `https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/search-customer?query=email:'${email}'`,
+    );
+       if (!response.ok) {
+      throw new Error(`Lỗi khi search khách hàng ${email}`);
+    }
+
+    return response.json();
+  };
+
   const createPaymentSession = async (lineItems, customerId) => {
+    const alo = {
+            line_items: lineItems,
+            customer_id: customerId,
+            contact: {
+              full_name: formDataContact.firstName + " " +formDataContact.lastName,
+              birthday: formDataContact.dob,
+              phone: formDataContact.phone,
+              citizen_identification: formDataContact.cccd,
+              address: formDataContact.address,
+              email: formDataContact.email,
+              gender: formDataContact.gender,
+              area: formDataContact.area,
+              affiliate_code: getAffiliateCode(),
+              is_contributor: "no"
+            },
+    }
+    console.log("Payload Create Payment: ", alo)
     try {
       const response = await fetch(
         "https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/create-payment-fb",
@@ -154,12 +182,27 @@ function ServiceFormRegisterFlow() {
   const handleCompleteCheckout = async () => {
     setLoadingFetch(true);
     try {
+      // const customerResponse = await createCustomer({
+      //   email: formDataContact.email,
+      //   name: formDataContact.firstName + " " +formDataContact.lastName,
+      // });
+      // const customerId = customerResponse.data;
+
+    let customerId;
+
+    const searchResponse = await searchCustomerByEmail(formDataContact.email);
+    const foundCustomers = searchResponse.data;
+
+    if (Array.isArray(foundCustomers) && foundCustomers.length > 0) {
+      customerId = foundCustomers[0].id;
+    } else {
       const customerResponse = await createCustomer({
         email: formDataContact.email,
-        name: formDataContact.firstName + " " +formDataContact.lastName,
+        name: formDataContact.firstName + " " + formDataContact.lastName,
       });
+      customerId = customerResponse.data;
+    }
 
-      const customerId = customerResponse.data;
       console.log("Customer id: ", customerId);
       const taskPromises = selectedServices.map((item) => ({
         service_name: item["Tên gói"],
