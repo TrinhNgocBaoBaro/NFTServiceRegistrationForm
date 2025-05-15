@@ -63,16 +63,32 @@ const ConsultationForm = () => {
   const handleSubmitForm = async (e) => {
     e.preventDefault();
     if (validateForm() && selectedServices.length > 0) {
-      setLoadingFetch(true);
       console.log("Form is valid:", formDataContact);
       await createContactCRM(formDataContact);
       setTimeout(() => {
-        setTab(1);
-      }, 3600);
+      setTab(1);
+    }, 500);
     } else {
       setError(true);
     }
   };
+//   const handleSubmitForm = async (e) => {
+//   e.preventDefault();
+
+//   if (validateForm() && selectedServices.length > 0) {
+//     setLoadingFetch(true);
+//     try {
+//       await createContactCRM(formDataContact);
+//       setTab(1); 
+//     } catch (error) {
+//       console.error("Gửi form thất bại:", error.message);
+//     } finally {
+//       setLoadingFetch(false); 
+//     }
+//   } else {
+//     setError(true);
+//   }
+// };
 
   const handleServiceToggle = (serviceSKU) => {
     const service = serviceData.find((item) => item.SKU === serviceSKU);
@@ -119,6 +135,7 @@ const ConsultationForm = () => {
       );
 
       const data = await response.json();
+      setLoadingFetch(false);
       if (!response.ok) {
         throw new Error(data.message || "Tạo contact khách hàng thất bại");
       }
@@ -139,6 +156,7 @@ const ConsultationForm = () => {
               className="img-fluid mb-4 rounded"
               alt="NFT Capital Group Banner"
               style={{ width: "100%" }}
+              onClick={()=> setLoadingFetch(true)}
             />
             <h2 className="mb-4 title-session fs-2">NHẬN TƯ VẤN MIỄN PHÍ</h2>
             <div
@@ -327,7 +345,7 @@ const ConsultationForm = () => {
             alt="Success Icon"
             style={{
               width: "240px",
-              height: "240px",
+              height: "242px",
               objectFit: "contain",
             }}
           />

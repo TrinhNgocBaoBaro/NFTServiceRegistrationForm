@@ -118,5 +118,15 @@ Bao gồm tư vấn và hoàn thiện toàn bộ hồ sơ xin Visa L1 và địn
     "Giá": 5000,
     "Recurring": "",
     "Loại ": "retail_service"
+  },
+    {
+    row_number: 12,
+    STT: 11,
+    "Tên gói": "Kế toán – thuế",
+    SKU: "P011",
+    "Mô tả": "Khai thuế, payroll, báo cáo tài chính cơ bản",
+    "Giá": 2000,
+    "Recurring": "",
+    "Loại ": "retail_service"
   }
 ];
