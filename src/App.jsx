@@ -123,7 +123,7 @@ function ServiceFormRegisterFlow() {
             line_items: lineItems,
             customer_id: customerId,
             contact: {
-              full_name: formDataContact.firstName + formDataContact.lastName,
+              full_name: formDataContact.firstName + " " +formDataContact.lastName,
               birthday: formDataContact.dob,
               phone: formDataContact.phone,
               citizen_identification: formDataContact.cccd,
@@ -155,8 +155,8 @@ function ServiceFormRegisterFlow() {
     setLoadingFetch(true);
     try {
       const customerResponse = await createCustomer({
-        email: "abc@example.com",
-        name: "Nguyễn Văn A",
+        email: formDataContact.email,
+        name: formDataContact.firstName + " " +formDataContact.lastName,
       });
 
       const customerId = customerResponse.data;

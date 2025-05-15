@@ -103,7 +103,7 @@ const ConsultationForm = () => {
           },
           body: JSON.stringify({
             area: formDataContact.area,
-            full_name: formDataContact.firstName + formDataContact.lastName,
+            full_name: formDataContact.firstName + " " +formDataContact.lastName,
             email: formDataContact.email,
             phone: formDataContact.phone,
             citizen_identification: "123456789101",
