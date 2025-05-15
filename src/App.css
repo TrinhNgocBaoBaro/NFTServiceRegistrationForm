@@ -99,9 +99,6 @@
     box-shadow: none;
   }
 
-  .form-consultation-container{
- 
-  }
 }
 
 .title-session {
@@ -118,8 +115,5 @@
 .PhoneInputInput:focus {
   outline: none !important;
   box-shadow: none !important;
-}
-
-.form-consultation-container {
 }
 
