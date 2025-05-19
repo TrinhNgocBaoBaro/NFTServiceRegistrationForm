@@ -3,105 +3,193 @@ import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 
 import ServiceFormRegister from "./components/ServiceFormRegister";
 import ServicePackCheckout from "./components/ServicePackCheckout";
 import ConsultationForm from "./components/ConsultationForm";
+import CollaboratorForm from "./components/CollaboratorForm";
+
 import Home from "./components/Home";
+
+import createAxios from "./service/axios";
+const API = createAxios();
 
 function ServiceFormRegisterFlow() {
   const [tab, setTab] = useState(0);
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [serviceData, setServiceData] = useState([]);
 
-  // const [formDataContact, setFormDataContact] = useState({
-  //   firstName: "Nguyễn Lê",
-  //   lastName: "Hữu",
-  //   dob: "2000-11-02",
-  //   phone: "+84354187011",
-  //   cccd: "123456789101",
-  //   address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
-  //   email: "nguyenlehuu1102@gmail.com",
-  //   gender: "Nam",
+  const [formDataContact, setFormDataContact] = useState({
+    firstName: "Nguyễn Lê",
+    lastName: "Hữu",
+    dob: "2000-11-02",
+    phone: "+84354187011",
+    cccd: "123456789101",
+    address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
+    email: "nguyenlehuu1102000@gmail.com",
+    gender: "",
+    area: "20bdc808-bddd-404d-ab75-fe8b60aa0413",
+  });
+
+  //   const [formDataContact, setFormDataContact] = useState({
+  //   firstName: "",
+  //   lastName: "",
+  //   dob: "",
+  //   phone: "",
+  //   cccd: "",
+  //   address: "",
+  //   email: "",
+  //   gender: "",
   //   area: "Việt Nam",
   // });
-
-    const [formDataContact, setFormDataContact] = useState({
-    firstName: "",
-    lastName: "",
-    dob: "",
-    phone: "",
-    cccd: "",
-    address: "",
-    email: "",
-    gender: "",
-    area: "Việt Nam",
-  });
 
   useEffect(() => {
     console.log("Các dịch vụ: ", selectedServices);
   }, [selectedServices]);
 
   useEffect(() => {
-    console.log("Form contact ở Cha: ", formDataContact);
+    console.log("Form contact: ", JSON.stringify(formDataContact, null, 2));
   }, [formDataContact]);
 
-    const getAffiliateCode = () => {
+  useEffect(() => {
+    fetchServiceData();
+  }, []);
+
+  const getAffiliateCode = () => {
     const params = new URLSearchParams(window.location.search);
     return params.get("fpr") || "";
   };
 
-  const fetchProductBySKU = async (sku) => {
-    const encodedSKU = encodeURIComponent(`metadata['SKU']:'${sku}'`);
-    const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/search-product?query=${encodedSKU}`;
+  const fetchServiceData = async () => {
+    try {
+      const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/unverified_investments`;
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Lỗi khi lấy sản phẩm với SKU ${sku}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Lỗi khi lấy sản phẩm}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetch Service Data: ", data.data);
+      // Gán vào state
+      setServiceData(data.data);
+    } catch (error) {
+      console.error("Lỗi khi fetch product:", error.message);
+      alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
     }
-
-    return response.json();
   };
 
-  const createProductBySKU = async (item) => {
-    console.log("Item: ", item.Recurring);
-    const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/create-product`;
+  const createNewOrderByInvestmentIdAxios = async (
+    customerId,
+    selectedServices
+  ) => {
+    console.log(
+      "Customer Id in createNewOrderByInvestmentId: ",
+      customerId,
+      typeof customerId
+    );
+    const payload = {
+      userId: customerId,
+      investment_list: selectedServices.map((item) => ({
+        investmentId: item.id,
+        quantity: item.quantity,
+        ...(item.investment_type === "investment_package" && {
+          amount: item.total_invest,
+        }),
+      })),
+    };
+    console.log("Final payload:", JSON.stringify(payload, null, 2));
+    try {
+      const response = await API.post(`/orders/public`, payload);
+      if (response) {
+        return response;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const createNewOrderByInvestmentId = async (customerId, selectedServices) => {
+    console.log(
+      "Customer Id in createNewOrderByInvestmentId: ",
+      customerId,
+      typeof customerId
+    );
+    const payload = {
+      userId: customerId,
+      investment_list: selectedServices.map((item) => ({
+        investmentId: item.id,
+        quantity: item.quantity,
+        ...(item.investment_type === "investment_package" && {
+          amount: item.total_invest,
+        }),
+      })),
+    };
+    console.log("Final payload:", JSON.stringify(payload, null, 2));
+
+    const url = "https://christian-jeana-khd-c86f9de4.koyeb.app/orders/public";
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        currency: "usd",
-        amount: item["Giá"] * 100,
-        recurring: {
-          interval: item.Recurring === "monthly" ? "month" : "",
-          interval_count: 3,
-        },
-        product_data: {
-          name: item["Tên gói"],
-        },
-        metadata: {
-          SKU: item.SKU,
-        },
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      throw new Error(`Lỗi khi tạo sản phẩm với SKU ${item.SKU}`);
+      throw new Error(`Lỗi khi tạo sản phẩm với customer ${customerId}`);
     }
-
     return response.json();
   };
 
-  const createCustomer = async ({ email, name }) => {
+  const createCustomerByPassAxios = async (formDataContact) => {
+    const payload = {
+      email: formDataContact.email,
+      name: formDataContact.firstName + " " + formDataContact.lastName,
+      birthday: formDataContact.dob,
+      phone: formDataContact.phone,
+      address: formDataContact.address,
+      gender: formDataContact.gender,
+      identityCode: formDataContact.cccd,
+      referalCode: getAffiliateCode(),
+      areaId: formDataContact.area,
+    };
+    console.log("Payload customer:", JSON.stringify(payload, null, 2));
+    try {
+      const response = await API.post(`/auth/register-by-pass`, payload);
+      if (response) {
+        return response;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const createCustomerByPass = async (formDataContact) => {
     const res = await fetch(
-      "https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/create-customer",
+      "https://christian-jeana-khd-c86f9de4.koyeb.app/auth/register-by-pass",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({
+          email: formDataContact.email,
+          name: formDataContact.firstName + " " + formDataContact.lastName,
+          birthday: formDataContact.dob,
+          phone: formDataContact.phone,
+          address: formDataContact.address,
+          gender: formDataContact.gender,
+          identityCode: formDataContact.cccd,
+          referalCode: getAffiliateCode(),
+          areaId: formDataContact.area,
+        }),
       }
     );
 
@@ -110,159 +198,150 @@ function ServiceFormRegisterFlow() {
     return data;
   };
 
-    const searchCustomerByEmail = async (email) => {
-    const response = await fetch(
-      `https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/search-customer?query=email:'${email}'`,
-    );
-       if (!response.ok) {
-      throw new Error(`Lỗi khi search khách hàng ${email}`);
-    }
-
-    return response.json();
-  };
-
-  const createPaymentSession = async (lineItems, customerId) => {
-    const alo = {
-            line_items: lineItems,
-            customer_id: customerId,
-            contact: {
-              full_name: formDataContact.firstName + " " +formDataContact.lastName,
-              birthday: formDataContact.dob,
-              phone: formDataContact.phone,
-              citizen_identification: formDataContact.cccd,
-              address: formDataContact.address,
-              email: formDataContact.email,
-              gender: formDataContact.gender,
-              area: formDataContact.area,
-              affiliate_code: getAffiliateCode(),
-              is_contributor: "no"
-            },
-    }
-    console.log("Payload Create Payment: ", alo)
-    try {
-      const response = await fetch(
-        "https://christian-jeana-khd-c86f9de4.koyeb.app/payment/stripe/create-payment-fb",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            line_items: lineItems,
-            customer_id: customerId,
-            contact: {
-              full_name: formDataContact.firstName + " " +formDataContact.lastName,
-              birthday: formDataContact.dob,
-              phone: formDataContact.phone,
-              citizen_identification: formDataContact.cccd,
-              address: formDataContact.address,
-              email: formDataContact.email,
-              gender: formDataContact.gender,
-              area: formDataContact.area,
-              affiliate_code: getAffiliateCode(),
-              is_contributor: "no"
-            },
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Tạo phiên thanh toán thất bại");
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Lỗi tạo payment session:", error);
-      throw error;
-    }
-  };
-
   const handleCompleteCheckout = async () => {
     setLoadingFetch(true);
     try {
-      // const customerResponse = await createCustomer({
-      //   email: formDataContact.email,
-      //   name: formDataContact.firstName + " " +formDataContact.lastName,
-      // });
-      // const customerId = customerResponse.data;
+      const customerResponse = await createCustomerByPassAxios(formDataContact);
+      console.log("Customer Response:", customerResponse);
 
-    let customerId;
+      if (
+        !customerResponse ||
+        !customerResponse.data ||
+        !customerResponse.data.id
+      ) {
+        throw new Error("Không lấy được ID khách hàng.");
+      }
 
-    const searchResponse = await searchCustomerByEmail(formDataContact.email);
-    const foundCustomers = searchResponse.data;
+      const customerId = customerResponse.data.id;
+      console.log("Customer Id:", customerId, typeof customerId);
 
-    if (Array.isArray(foundCustomers) && foundCustomers.length > 0) {
-      customerId = foundCustomers[0].id;
-    } else {
-      const customerResponse = await createCustomer({
-        email: formDataContact.email,
-        name: formDataContact.firstName + " " + formDataContact.lastName,
-      });
-      customerId = customerResponse.data;
-    }
+console.log("⏳ Đợi 30 giây...", new Date().toISOString());
+      await new Promise((r) => setTimeout(r, 30000));
+console.log("✅ Đã xong delay", new Date().toISOString());
 
-      console.log("Customer id: ", customerId);
-      const taskPromises = selectedServices.map((item) => ({
-        service_name: item["Tên gói"],
-        recurring: item.Recurring || "one_time",
-        sku: item.SKU,
-        service_price: item["Giá"] === "P001" ? item["Giá"] : item["Giá"] * 100,
-        quantity: item.quantity || 1,
-        task:
-          item.SKU === "P001"
-            ? createProductBySKU(item)
-            : fetchProductBySKU(item.SKU),
-      }));
-
-      const allResults = await Promise.all(taskPromises.map((t) => t.task));
-      console.log("Kết quả theo đúng thứ tự:", allResults);
-
-      // const lineItems = allResults.map((result, index) => ({
-      //   price:
-      //     typeof result.data === "string" ? result.data : result.data[0].id,
-      //   quantity: taskPromises[index].quantity,
-      // }));
-      // console.log("Line items: ", lineItems);
-
-      /////////////////////////////////////////////
-      const newLineItems = allResults.map((result, index) => ({
-        price_stripe_id:
-          typeof result.data === "string" ? result.data : result.data[0].id,
-        quantity: taskPromises[index].quantity,
-        price_hubspot: taskPromises[index].service_price,
-        sku: taskPromises[index].sku,
-        service_name: taskPromises[index].service_name,
-        recurring: taskPromises[index].recurring,
-      }));
-
-      console.log("New line items: ", newLineItems);
-
-      ////////////////////////////////////////////////
-      const paymentSession = await createPaymentSession(
-        newLineItems,
-        customerId
+      const orderResponse = await createNewOrderByInvestmentIdAxios(
+        customerId,
+        selectedServices
       );
 
-      window.location.href = paymentSession.data.url;
+      if (orderResponse) {
+        console.log("OrderResponse: ", orderResponse);
+        alert("Vậy là thành công rồi đó!");
+      }
     } catch (error) {
       console.error("Lỗi:", error);
       alert("Có lỗi xảy ra khi xử lý sản phẩm. Vui lòng thử lại.");
     } finally {
-      // setLoadingFetch(false);
+      setLoadingFetch(false);
     }
   };
 
+  //     const handleCompleteCheckout = async () => {
+  //     setLoadingFetch(true);
+  //     try {
+  //       let customerId
+  //       const customerResponse = await createCustomerByPass(formDataContact);
+  //       if (customerResponse) {
+  //           customerId = customerResponse.data.id
+  //       }
+
+  //       ////////////////////////////////////////////////
+  //       const orderResponse = await createNewOrderByInvestmentId(
+  //         customerId,
+  //         selectedServices
+  //       );
+
+  //       if (orderResponse) {
+  //         console.log("OrderResponse: ", orderResponse);
+  //         alert("Vậy là thành công rồi đó!");
+  //       }
+  //     } catch (error) {
+  //       console.error("Lỗi:", error);
+  //       alert("Có lỗi xảy ra khi xử lý sản phẩm. Vui lòng thử lại.");
+  //     } finally {
+  //       setLoadingFetch(false);
+  //     }
+  //   };
+
+  //   const handleCompleteCheckout = async () => {
+  //   setLoadingFetch(true);
+  //   try {
+  //     // 1. Gửi yêu cầu tạo customer
+  //     const registerResponse = await fetch(
+  //       "https://christian-jeana-khd-c86f9de4.koyeb.app/auth/register-by-pass",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           email: formDataContact.email,
+  //           name: `${formDataContact.firstName} ${formDataContact.lastName}`,
+  //           birthday: formDataContact.dob,
+  //           phone: formDataContact.phone,
+  //           address: formDataContact.address,
+  //           gender: formDataContact.gender,
+  //           identityCode: formDataContact.cccd,
+  //           referalCode: getAffiliateCode(),
+  //           areaId: formDataContact.area,
+  //         }),
+  //       }
+  //     );
+
+  //     const registerData = await registerResponse.json();
+  //     if (!registerResponse.ok || !registerData.data?.id) {
+  //       throw new Error(registerData.message || "Tạo khách hàng thất bại.");
+  //     }
+
+  //     const customerId = registerData.data.id;
+  //     console.log("✅ Customer Register data: ", registerData);
+  //     console.log("✅ Customer created, ID:", customerId);
+
+  //     // 2. Chuẩn bị dữ liệu tạo order
+  //     const payload = {
+  //       userId: customerId,
+  //       investment_list: selectedServices.map((item) => ({
+  //         investmentId: item.id,
+  //         quantity: item.quantity,
+  //         ...(item.investment_type === "investment_package" && {
+  //           amount: item.total_invest,
+  //         }),
+  //       })),
+  //     };
+
+  //     console.log("📦 Payload gửi order:", JSON.stringify(payload, null, 2));
+
+  //     // 3. Gửi yêu cầu tạo order
+  //     const orderResponse = await fetch(
+  //       "https://christian-jeana-khd-c86f9de4.koyeb.app/orders/public",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     const orderData = await orderResponse.json();
+  //     if (!orderResponse.ok) {
+  //       throw new Error(orderData.message || "Tạo đơn hàng thất bại.");
+  //     }
+
+  //     console.log("✅ Order created:", orderData);
+  //     alert("Vậy là thành công rồi đó!");
+
+  //   } catch (error) {
+  //     console.error("❌ Lỗi khi hoàn tất thanh toán:", error);
+  //     alert(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+  //   } finally {
+  //     setLoadingFetch(false);
+  //   }
+  // };
   return (
     <>
-      <div
-        className="container mt-3 mb-5 container-main"
-      >
+      <div className="container mt-3 mb-5 container-main">
         {tab === 0 && (
           <>
             <ServiceFormRegister
               setTab={setTab}
+              serviceData1={serviceData}
               setFormDataContact={setFormDataContact}
               formDataContact={formDataContact}
               onChange={(services) => {
@@ -296,7 +375,7 @@ function ServiceFormRegisterFlow() {
                 data-bs-target="#exampleModal"
                 onClick={() => console.log("Checkout")}
               >
-                Thanh toán
+                Hoàn tất
               </button>
             </div>
             <div
@@ -344,7 +423,7 @@ function ServiceFormRegisterFlow() {
                     </div>
                     <div class="modal-body">
                       Hãy kiểm tra kĩ các gói dịch vụ, số lượng và đơn giá, bấm
-                      hoàn tất để đi đến thanh toán!
+                      hoàn tất!
                     </div>
                     <div class="modal-footer">
                       <button
@@ -360,7 +439,7 @@ function ServiceFormRegisterFlow() {
                         onClick={handleCompleteCheckout}
                         // onClick={() => setLoadingFetch(true)}
                       >
-                        Hoàn tất
+                        Xác nhận
                       </button>
                     </div>
                   </div>
@@ -370,10 +449,10 @@ function ServiceFormRegisterFlow() {
           </>
         )}
         {tab === 2 && (
-        <>
+          <>
             <ConsultationForm />
-        </>
-      )}
+          </>
+        )}
       </div>
     </>
   );
@@ -385,6 +464,7 @@ function App() {
       <Routes>
         <Route path="/dang-ky-dich-vu" element={<ServiceFormRegisterFlow />} />
         <Route path="/dang-ky-tu-van" element={<ConsultationForm />} />
+        <Route path="/dang-ky-cong-tac-vien" element={<CollaboratorForm />} />
         <Route path="*" element={<Home />} />
       </Routes>
     </Router>

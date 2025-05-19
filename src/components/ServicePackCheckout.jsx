@@ -11,22 +11,22 @@ const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
     }, {})
   );
 
-  const handleQuantityChange = (sku, value) => {
+  const handleQuantityChange = (id, value) => {
     const val = Math.max(1, parseInt(value) || 1);
     setQuantities((prev) => ({
       ...prev,
-      [sku]: val,
+      [id]: val,
     }));
     const updated = selected.map((item) =>
-      item.SKU === sku ? { ...item, quantity: val } : item
+      item.id === id ? { ...item, quantity: val } : item
     );
     onUpdateSelected(updated);
   };
 
   const getTotal = () => {
     return selected.reduce((sum, item) => {
-      const qty = quantities[item.SKU] || 1;
-      const price = parseFloat(item["Giá"]) || 0;
+      const qty = quantities[item.id] || 1;
+      const price = parseFloat(item.total_invest) || 0;
       return sum + qty * price;
     }, 0);
   };
@@ -57,26 +57,32 @@ const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
             </thead>
             <tbody>
               {selected.map((item, index) => (
-                <tr key={item.SKU}>
+                <tr key={item.id}>
                   <th scope="row">{index + 1}</th>
                   <td>
-                    {item["Tên gói"] || "Không có tên"}
+                    {item.name || "Không có tên"}
                     <br />
                     <small className="text-muted" style={{}}>
-                      {item["Mô tả"] || "Không có mô tả"}
+                      {item.description || "Không có mô tả"}
                     </small>
                   </td>
                   {/* <td>{item["Mô tả"] || "Không có mô tả"}</td> */}
-                  <td>{item["Giá"] || 0}</td>
-                  <td>{item["Recurring"] ? "tháng" : "-"}</td>
+                  <td>
+                    {item.total_invest.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }) || 0}
+                  </td>
+                  <td>{item.profit_type === "monthy" ? "tháng" : "-"}</td>
                   <td>
                     <input
                       type="number"
+                      inputMode="numeric"
                       className="form-control"
-                      value={quantities[item.SKU] || 1}
+                      value={quantities[item.id] || 1}
                       min={1}
                       onChange={(e) =>
-                        handleQuantityChange(item.SKU, e.target.value)
+                        handleQuantityChange(item.id, e.target.value)
                       }
                     />
                   </td>
@@ -93,7 +99,7 @@ const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
           >
             <h3>Tổng tiền:</h3>
             <h4>
-              {getTotal().toLocaleString("de-DE", {
+              {getTotal().toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}{" "}

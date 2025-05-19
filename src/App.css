@@ -92,11 +92,22 @@
   border-radius: 14px;
   max-width: 900px
 }
+.container-form-embed { 
+  padding: 40px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  border-radius: 14px;
+  width: 900px
+}
 
 @media (max-width: 575.98px) {
   .container-main {
     padding: 0px;
     box-shadow: none;
+  }
+  .container-form-embed {
+    padding: 0px;
+    box-shadow: none;
+    width: 366px;
   }
 
 }

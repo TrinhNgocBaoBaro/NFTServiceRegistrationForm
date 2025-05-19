@@ -12,30 +12,37 @@ const ServiceFormRegister = ({
   setTab,
   formDataContact,
   setFormDataContact,
-  serviceData1,
 }) => {
-  // const [serviceData1, setServiceData1] = useState([]);
+  const [serviceData1, setServiceData1] = useState([]);
   const [selectedCombo, setSelectedCombo] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [error, setError] = useState(false);
 
   ///////////////////////////////////////
-  const [contributeAmounts, setContributeAmounts] = useState({});
-  const [touchedFields, setTouchedFields] = useState({});
+  const [contributeAmount, setContributeAmount] = useState("");
+  const [isTouched, setIsTouched] = useState(false);
+  const isP001Selected = selectedCombo.some((combo) => combo.SKU === "P001");
+  const isInvalid = isTouched && (!contributeAmount || contributeAmount < 500);
 
-  const isInvestmentServiceSelected = (id) => {
-    return selectedCombo.some(
-      (combo) =>
-        combo.investment_type === "investment_package" && combo.id === id
-    );
+  /////////////////////////////////////
+    const fetchServiceData = async (sku) => {
+    try {
+      const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/unverified_investments`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Lỗi khi lấy sản phẩm}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetch Service Data: ", data.data)
+      // Gán vào state
+      setServiceData1(data.data);
+    } catch (error) {
+      console.error("Lỗi khi fetch product:", error.message);
+      alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
+    }
   };
-
-  const validContributeAmount = (id) => {
-    const value = contributeAmounts[id];
-    return value && parseFloat(value) >= 500;
-  };
-
-  // const isInvalid = isTouched && (!contributeAmount || contributeAmount < 500);
 
   const handleChangeFormDataContact = (e) => {
     const { name, value } = e.target;
@@ -59,23 +66,23 @@ const ServiceFormRegister = ({
     const errors = [];
     requiredFields.forEach((field) => {
       if (!formDataContact[field]) {
-        errors.push(`${field} không được để trống`);
+        errors.push(`${field} is required`);
       }
     });
 
-    // if (isP001Selected) {
-    //   if (errors.length > 0 || !contributeAmount || contributeAmount < 500) {
-    //     setError(true);
-    //     setIsTouched(true);
-    //     return false;
-    //   }
-    // } else if (!isP001Selected) {
-    //   if (errors.length > 0) {
-    //     // alert("Vui lòng điền đầy đủ thông tin: \n" + errors.join("\n"));
-    //     setError(true);
-    //     return false;
-    //   }
-    // }
+    if (isP001Selected) {
+      if (errors.length > 0 || (!contributeAmount || contributeAmount < 500)) {
+        setError(true);
+        setIsTouched(true)
+        return false;
+      }
+    } else if(!isP001Selected) {
+      if (errors.length > 0) {
+        // alert("Vui lòng điền đầy đủ thông tin: \n" + errors.join("\n"));
+        setError(true);
+        return false;
+      }
+    }
 
     // if (!(selectedCombo.length > 0 || selectedServices.length > 0)) {
     //   setIsTouched(true);
@@ -84,42 +91,7 @@ const ServiceFormRegister = ({
     //     return false;
     //   }
     // }
-    
 
-// 2. Kiểm tra các combo cần contribute amount
-  const newTouchedFields = {};
-  const invalidCombos = selectedCombo.filter((combo) => {
-    const isInvestmentPackage = combo.investment_type === "investment_package";
-    const amount = contributeAmounts[combo.id];
-    const isInvalid = !amount || parseFloat(amount) < 500;
-
-    if (isInvestmentPackage && isInvalid) {
-      newTouchedFields[combo.id] = true; // đánh dấu là đã touch để hiển thị lỗi
-      return true;
-    }
-
-    return false;
-  });
-    
-    if (invalidCombos.length > 0) {
-      errors.push("Tất cả các khoản đầu tư dạng phải ≥ 500 USD.");
-    }
-    const hasSelection =
-      selectedCombo.length > 0 || selectedServices.length > 0;
-    if (!hasSelection) {
-      errors.push("Bạn cần chọn ít nhất một gói dịch vụ hoặc combo.");
-    }
-
-      // 4. Set state & kết luận
-  if (Object.keys(newTouchedFields).length > 0) {
-    setTouchedFields((prev) => ({ ...prev, ...newTouchedFields }));
-  }
-
-    if (errors.length > 0) {
-      setError(true);
-      // alert("Vui lòng kiểm tra các lỗi sau:\n" + errors.join("\n"));
-      return false;
-    }
     setError(false);
     return true;
   };
@@ -145,6 +117,10 @@ const ServiceFormRegister = ({
   };
 
   useEffect(() => {
+    // console.log("Form contact ở Con: ", formDataContact);
+    fetchServiceData();
+  }, []);
+    useEffect(() => {
     console.log("serviceData1 nè Con: ", serviceData1);
   }, [serviceData1]);
 
@@ -153,39 +129,33 @@ const ServiceFormRegister = ({
     onChange?.(selected);
   }, [selectedCombo, selectedServices]);
 
-  const handleComboChange = (comboId) => {
-    const combo = serviceData1.find(
-      (item) => item.profit_type !== "package_service" && item.id === comboId
+  const handleComboChange = (comboSKU) => {
+    const combo = serviceData.find(
+      (item) => item["Loại "] === "package_service" && item.SKU === comboSKU
     );
 
     if (!combo) return;
 
-    const exists = selectedCombo.some((s) => s.id === comboId);
+    const exists = selectedCombo.some((s) => s.SKU === comboSKU);
 
     if (exists) {
-      setSelectedCombo((prev) => prev.filter((s) => s.id !== comboId));
+      setSelectedCombo((prev) => prev.filter((s) => s.SKU !== comboSKU));
     } else {
       setSelectedCombo((prev) => [...prev, combo]);
     }
   };
 
-  const handleServiceToggle = (serviceId) => {
-    const service = serviceData1.find(
-      (item) =>
-        item.investment_type === "retail_service" && item.id === serviceId
+  const handleServiceToggle = (serviceSKU) => {
+    const service = serviceData.find(
+      (item) => item["Loại "] === "retail_service" && item.SKU === serviceSKU
     );
-    const exists = selectedServices.some((s) => s.id === serviceId);
+    const exists = selectedServices.some((s) => s.SKU === serviceSKU);
 
     if (exists) {
-      setSelectedServices((prev) => prev.filter((s) => s.id !== serviceId));
+      setSelectedServices((prev) => prev.filter((s) => s.SKU !== serviceSKU));
     } else {
       setSelectedServices((prev) => [...prev, service]);
     }
-  };
-
-  const getTextAfterDash = (text) => {
-    const parts = text.split("–");
-    return parts[0]?.trim() || ""; // Cắt phần sau và loại bỏ khoảng trắng
   };
 
   return (
@@ -435,8 +405,8 @@ const ServiceFormRegister = ({
                     }`}
                     name="gender"
                     id="nam"
-                    value="male"
-                    checked={formDataContact.gender === "male"}
+                    value="Nam"
+                    checked={formDataContact.gender === "Nam"}
                     onChange={(e) =>
                       setFormDataContact({
                         ...formDataContact,
@@ -456,8 +426,8 @@ const ServiceFormRegister = ({
                     }`}
                     name="gender"
                     id="nu"
-                    value="female"
-                    checked={formDataContact.gender === "female"}
+                    value="Nữ"
+                    checked={formDataContact.gender === "Nữ"}
                     onChange={(e) =>
                       setFormDataContact({
                         ...formDataContact,
@@ -477,7 +447,7 @@ const ServiceFormRegister = ({
               </label>
               <select
                 className="form-select"
-                // value={formDataContact.area}
+                value={formDataContact.area}
                 onChange={(e) =>
                   setFormDataContact({
                     ...formDataContact,
@@ -485,12 +455,8 @@ const ServiceFormRegister = ({
                   })
                 }
               >
-                <option value="20bdc808-bddd-404d-ab75-fe8b60aa0413">
-                  Việt Nam
-                </option>
-                <option value="505da52e-4d14-46df-9b7d-d093b86cd5ce">
-                  USA
-                </option>
+                <option value="Việt Nam">Việt Nam</option>
+                <option value="Texas">Texas</option>
               </select>
             </div>
           </div>
@@ -520,112 +486,105 @@ const ServiceFormRegister = ({
         </div>
         <div className="mb-3">
           <label className="form-label fw-bold">Gói dịch vụ:</label>
-          {serviceData1
-            .filter((item) => item.investment_type !== "retail_service")
+          {serviceData
+            .filter((item) => item["Loại "] === "package_service")
             .map((combo, index) => (
-              <>
-                <div className="form-check mt-2" key={index}>
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id={`combo-${combo.id}`}
-                    checked={selectedCombo.some((s) => s.id === combo.id)}
-                    onChange={() => handleComboChange(combo.id)}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`combo-${combo.id}`}
-                  >
-                    {combo.name}
-                  </label>
-                </div>
-                {isInvestmentServiceSelected(combo.id) &&
-                  combo.investment_type === "investment_package" && (
-                    <div className="mt-3 mb-4">
-                      <label className="form-label fw-bold">
-                        Số tiền góp (USD):{" "}
-                        <span className="text-danger">* </span>
-                        <span style={{ fontFamily: "Inter", fontSize: "14px" }}>
-                          {getTextAfterDash(combo.name)}
-                        </span>
-                      </label>
-                      <input
-                        type="number"
-                        // className={`form-control ${isInvalid ? "is-invalid" : ""}`}
-                        className={`form-control ${
-                          touchedFields[combo.id] &&
-                          !validContributeAmount(combo.id)
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        min={500}
-                        step={500}
-                        placeholder="Nhập số tiền bạn muốn góp"
-                        value={contributeAmounts[combo.id] || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setContributeAmounts((prev) => ({
-                            ...prev,
-                            [combo.id]: value,
-                          }));
-
-                          const parsedValue = parseFloat(value);
-                          setSelectedCombo((prev) =>
-                            prev.map((combo_old) =>
-                              combo_old.id === combo.id
-                                ? { ...combo_old, total_invest: parsedValue }
-                                : combo_old
-                            )
-                          );
-                        }}
-                        onBlur={() => {
-                          setTouchedFields((prev) => ({
-                            ...prev,
-                            [combo.id]: true,
-                          }));
-                        }}
-                      />
-                      {touchedFields[combo.id] &&
-                        !validContributeAmount(combo.id) && (
-                          <div className="invalid-feedback">
-                            Vui lòng nhập số tiền (≥ 500$).
-                          </div>
-                        )}
-                    </div>
-                  )}
-              </>
+              // <div className="form-check mt-2" key={combo.SKU}>
+              //   <input
+              //     type="radio"
+              //     className="form-check-input"
+              //     name="combo"
+              //     id={`combo-${combo.SKU}`}
+              //     checked={selectedCombo?.SKU === combo.SKU}
+              //     onChange={() => handleComboChange(combo.SKU)}
+              //   />
+              //   <label
+              //     className="form-check-label"
+              //     htmlFor={`combo-${combo.SKU}`}
+              //   >
+              //     {combo["Tên gói"]}
+              //   </label>
+              // </div>
+              <div className="form-check mt-2" key={index}>
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id={`combo-${combo.SKU}`}
+                  checked={selectedCombo.some((s) => s.SKU === combo.SKU)}
+                  onChange={() => handleComboChange(combo.SKU)}
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor={`combo-${combo.SKU}`}
+                >
+                  {combo["Tên gói"]}
+                </label>
+              </div>
             ))}
+          {isP001Selected && (
+            <div className="mt-3">
+              <label className="form-label fw-bold">
+                Số tiền góp (USD): <span className="text-danger">*</span>
+              </label>
+              <input
+                type="number"
+                className={`form-control ${isInvalid ? "is-invalid" : ""}`}
+                min={500}
+                step={100}
+                placeholder="Nhập số tiền bạn muốn góp"
+                value={contributeAmount}
+                onChange={(e) => {
+                  const newPrice = parseFloat(e.target.value);
+                  setContributeAmount(e.target.value);
+                  setSelectedCombo((prev) =>
+                    prev.map((combo) =>
+                      combo.SKU === "P001" ? { ...combo, Giá: newPrice } : combo
+                    )
+                  );
+                }}
+                onBlur={() => setIsTouched(true)}
+              />
+              {isInvalid && (
+                <div className="invalid-feedback">
+                  Vui lòng nhập số tiền (≥ 500$).
+                </div>
+              )}
+            </div>
+          )}
+          {/* {(!selectedCombo || selectedServices.length === 0) && 
+            <div className="mt-3 text-danger fs-6 fw-medium">
+              Vui lòng chọn gói dịch vụ.
+            </div>
+          } */}
           <div className="mt-3">
             {" "}
             Chi tiết các gói / dịch vụ:{" "}
-            <a
-              href="https://drive.google.com/file/d/1cOzMenOyJlirqYAMuIuYP-sXhu5z9CLG/view?usp=sharing"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://drive.google.com/file/d/1cOzMenOyJlirqYAMuIuYP-sXhu5z9CLG/view?usp=sharing" target="_blank" rel="noreferrer">
               ServicePack.pdf
             </a>
           </div>
         </div>
         <label className="form-label fw-bold">Dịch vụ riêng lẻ:</label>
         <div className="row">
-          {serviceData1
-            .filter((item) => item.investment_type === "retail_service")
+          {serviceData
+            .filter((item) => item["Loại "] === "retail_service")
             .map((service, index) => (
               <div className="col-md-6" key={index}>
                 <div className="form-check mt-2">
                   <input
                     type="checkbox"
                     className="form-check-input"
-                    id={`service-${service.id}`}
-                    checked={selectedServices.some((s) => s.id === service.id)}
-                    onChange={() => handleServiceToggle(service.id)}
+                    id={`service-${service.SKU}`}
+                    checked={selectedServices.some(
+                      (s) => s.SKU === service.SKU
+                    )}
+                    onChange={() => handleServiceToggle(service.SKU)}
                   />
                   <label
                     className="form-check-label"
-                    htmlFor={`service-${service.id}`}
+                    htmlFor={`service-${service.SKU}`}
                   >
-                    {service.name}
+                    {service["Tên gói"]}
                   </label>
                 </div>
               </div>
@@ -639,11 +598,7 @@ const ServiceFormRegister = ({
           </div>
         )}{" "}
         <div className="d-flex justify-content-end">
-          <button
-            className="btn btn-primary btn-lg"
-            onClick={handleNextStep}
-            style={{ backgroundColor: "#074379" }}
-          >
+          <button className="btn btn-primary btn-lg" onClick={handleNextStep}  style={{ backgroundColor: "#074379" }}>
             Tiếp theo
           </button>
         </div>
