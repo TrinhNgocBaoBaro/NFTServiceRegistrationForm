@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 import {
   BrowserRouter as Router,
@@ -26,6 +27,7 @@ function ServiceFormRegisterFlow() {
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
   const [serviceData, setServiceData] = useState([]);
+  const [processingStage, setProcessingStage] = useState("initial");
 
   const [formDataContact, setFormDataContact] = useState({
     firstName: "Nguyễn Lê",
@@ -90,6 +92,22 @@ function ServiceFormRegisterFlow() {
       alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
     }
   };
+
+  //   const searchEmailExist = async (email) => {
+  //   try {
+  //     const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/crm/${email}`;
+
+  //     const response = await fetch(url);
+  //     if (!response.ok) {
+  //       throw new Error(`Lỗi tìm kiếm email ${email}}`);
+  //     }
+  //     const data = await response.json();
+  //     return data.data
+  //     //data.data.results[0].id
+  //   } catch (error) {
+  //     console.error("Lỗi khi tìm kiếm email:", error.message);
+  //   }
+  // };
 
   const createNewOrderByInvestmentIdAxios = async (
     customerId,
@@ -204,6 +222,7 @@ function ServiceFormRegisterFlow() {
 
   const handleCompleteCheckout = async () => {
     setLoadingFetch(true);
+    setProcessingStage("creatingCustomer");
     try {
       const customerResponse = await createCustomerByPassAxios(formDataContact);
       console.log("Customer Response:", customerResponse);
@@ -220,9 +239,10 @@ function ServiceFormRegisterFlow() {
       console.log("Customer Id:", customerId, typeof customerId);
 
       console.log("⏳ Đợi 30 giây...", new Date().toISOString());
+      setProcessingStage("waitingForSystem");
       await new Promise((r) => setTimeout(r, 30000));
       console.log("✅ Đã xong delay", new Date().toISOString());
-
+      setProcessingStage("creatingOrder");
       const orderResponse = await createNewOrderByInvestmentIdAxios(
         customerId,
         selectedServices
@@ -230,13 +250,14 @@ function ServiceFormRegisterFlow() {
 
       if (orderResponse) {
         console.log("OrderResponse: ", orderResponse);
-        alert("Vậy là thành công rồi đó!");
+        // alert("Vậy là thành công rồi đó!");
+        setProcessingStage("success");
       }
     } catch (error) {
       console.error("Lỗi:", error);
       alert("Có lỗi xảy ra khi xử lý sản phẩm. Vui lòng thử lại.");
     } finally {
-      setLoadingFetch(false);
+      // setLoadingFetch(false);
     }
   };
 
@@ -391,25 +412,71 @@ function ServiceFormRegisterFlow() {
               data-bs-backdrop="static"
               data-bs-keyboard="false"
             >
-              <div class="modal-dialog modal-dialog-centered">
+              <div
+                class={`modal-dialog modal-dialog-centered ${
+                  (processingStage === "waitingForSystem" ||
+                    processingStage === "success") &&
+                "modal-lg"
+                  
+                } ${(!loadingFetch && processingStage === "initial") && "modal-md"}`}
+              >
                 {loadingFetch ? (
                   <div
                     class="modal-content d-flex justify-content-center align-items-center"
-                    style={{ height: "200px" }}
+                    style={{ padding: "30px 40px 30px" }}
                   >
-                    <div
-                      class="spinner-grow"
-                      role="status"
-                      style={{
-                        width: "4rem",
-                        height: "4rem",
-                        color: "#074379",
-                      }}
-                    >
-                      <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <span className="mt-3 fs-4">
-                      Đang xử lí, vui lòng chờ...
+                    {processingStage === "success" ? (
+                      <DotLottieReact
+                        src="https://lottie.host/948331e3-fc39-496c-a7fa-db12f204c14f/w8yiOZIwCZ.lottie"
+                        loop
+                        autoplay
+                        style={{
+                          width: "20rem",
+                          height: "10rem",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        class="spinner-grow"
+                        role="status"
+                        style={{
+                          width: "5rem",
+                          height: "5rem",
+                          color: "#074379",
+                          //color: "#3A86FF"
+                        }}
+                      >
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    )}
+                    <span className="mt-3 fs-4 text-center">
+                      {
+                        {
+                          initial: "Đang xử lí, vui lòng chờ...",
+                          creatingCustomer: "Đang tạo thông tin khách hàng...",
+                          waitingForSystem:
+                            "Hệ thống đang xử lý, vui lòng đợi trong giây lát...",
+                          creatingOrder: "Đang tạo đơn hàng...",
+                          success: (
+                            <div>
+                              <div
+                                style={{
+                                  fontFamily: "Inter",
+                                }}
+                                className="fs-5 mb-3"
+                              >
+                                Hãy kiểm tra email và thanh toán để hoàn tất quy
+                                trình!.
+                              </div>
+                          
+                              <div style={{ fontWeight: "bold" }}>
+                                Cảm ơn bạn đã tin tưởng dịch vụ của bên chúng
+                                tôi.
+                              </div>
+                            </div>
+                          ),
+                        }[processingStage]
+                      }
                     </span>
                   </div>
                 ) : (

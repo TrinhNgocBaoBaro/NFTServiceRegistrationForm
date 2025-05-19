@@ -13,6 +13,7 @@ const ServiceFormRegister = ({
   formDataContact,
   setFormDataContact,
   serviceData1,
+  searchEmailExist
 }) => {
   // const [serviceData1, setServiceData1] = useState([]);
   const [selectedCombo, setSelectedCombo] = useState([]);
@@ -404,7 +405,7 @@ const ServiceFormRegister = ({
               <div class="invalid-feedback">Vui lòng nhập đầy đủ.</div>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Địa chỉ</label>
+              <label className="form-label">Địa chỉ <span className="text-danger">*</span></label>
               <input
                 type="text"
                 name="address"
