@@ -80,7 +80,11 @@ function ServiceFormRegisterFlow() {
       const data = await response.json();
       console.log("Fetch Service Data: ", data.data);
       // Gán vào state
-      setServiceData(data.data);
+      const dataSort = data.data;
+      const sortedServiceData = dataSort.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+      setServiceData(sortedServiceData);
     } catch (error) {
       console.error("Lỗi khi fetch product:", error.message);
       alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
@@ -215,9 +219,9 @@ function ServiceFormRegisterFlow() {
       const customerId = customerResponse.data.id;
       console.log("Customer Id:", customerId, typeof customerId);
 
-console.log("⏳ Đợi 30 giây...", new Date().toISOString());
+      console.log("⏳ Đợi 30 giây...", new Date().toISOString());
       await new Promise((r) => setTimeout(r, 30000));
-console.log("✅ Đã xong delay", new Date().toISOString());
+      console.log("✅ Đã xong delay", new Date().toISOString());
 
       const orderResponse = await createNewOrderByInvestmentIdAxios(
         customerId,

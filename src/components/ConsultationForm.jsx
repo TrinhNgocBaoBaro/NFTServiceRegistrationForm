@@ -4,7 +4,6 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "../App.css";
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
-import { serviceData } from "../data/dataService";
 import NFTBanner from "../assets/images/NFTBanner.png";
 import NFTBanner2 from "../assets/images/NFTBanner2.jpg";
 import SuccessLogo from "../assets/images/SuccessLogo.png";
@@ -16,6 +15,7 @@ const ConsultationForm = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [error, setError] = useState(false);
   const [loadingFetch, setLoadingFetch] = useState(false);
+  const [serviceData, setServiceData] = useState([]);
 
   const [formDataContact, setFormDataContact] = useState({
     firstName: "",
@@ -25,9 +25,36 @@ const ConsultationForm = () => {
     area: "Việt Nam",
   });
 
+  const fetchServiceData = async () => {
+    try {
+      const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/unverified_investments`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Lỗi khi lấy sản phẩm}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetch Service Data: ", data.data);
+      // Gán vào state
+      const dataSort = data.data;
+      const sortedServiceData = dataSort.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+      setServiceData(sortedServiceData);
+    } catch (error) {
+      console.error("Lỗi khi fetch product:", error.message);
+      alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
+    }
+  };
+
   useEffect(() => {
     console.log("Các dịch vụ được chọn ở form tư vấn: ", selectedServices);
   }, [selectedServices]);
+
+  useEffect(() => {
+    fetchServiceData();
+  }, []);
 
   const handleChangeFormDataContact = (e) => {
     const { name, value } = e.target;
@@ -37,10 +64,12 @@ const ConsultationForm = () => {
     }));
   };
 
-    useEffect(() => {
-    console.log("Các dịch vụ được chọn ở form tư vấn khi biến đổi: ", [...selectedServices].map((item,index)=>(item["Tên gói"])));
+  useEffect(() => {
+    console.log(
+      "Các dịch vụ được chọn ở form tư vấn khi biến đổi: ",
+      [...selectedServices].map((item) => item.name)
+    );
   }, [selectedServices]);
-
 
   const validateForm = () => {
     const requiredFields = ["firstName", "lastName", "phone", "email", "area"];
@@ -66,36 +95,36 @@ const ConsultationForm = () => {
       console.log("Form is valid:", formDataContact);
       await createContactCRM(formDataContact);
       setTimeout(() => {
-      setTab(1);
-    }, 500);
+        setTab(1);
+      }, 500);
     } else {
       setError(true);
     }
   };
-//   const handleSubmitForm = async (e) => {
-//   e.preventDefault();
+  //   const handleSubmitForm = async (e) => {
+  //   e.preventDefault();
 
-//   if (validateForm() && selectedServices.length > 0) {
-//     setLoadingFetch(true);
-//     try {
-//       await createContactCRM(formDataContact);
-//       setTab(1); 
-//     } catch (error) {
-//       console.error("Gửi form thất bại:", error.message);
-//     } finally {
-//       setLoadingFetch(false); 
-//     }
-//   } else {
-//     setError(true);
-//   }
-// };
+  //   if (validateForm() && selectedServices.length > 0) {
+  //     setLoadingFetch(true);
+  //     try {
+  //       await createContactCRM(formDataContact);
+  //       setTab(1);
+  //     } catch (error) {
+  //       console.error("Gửi form thất bại:", error.message);
+  //     } finally {
+  //       setLoadingFetch(false);
+  //     }
+  //   } else {
+  //     setError(true);
+  //   }
+  // };
 
-  const handleServiceToggle = (serviceSKU) => {
-    const service = serviceData.find((item) => item.SKU === serviceSKU);
-    const exists = selectedServices.some((s) => s.SKU === serviceSKU);
+  const handleServiceToggle = (serviceId) => {
+    const service = serviceData.find((item) => item.id === serviceId);
+    const exists = selectedServices.some((s) => s.id === serviceId);
 
     if (exists) {
-      setSelectedServices((prev) => prev.filter((s) => s.SKU !== serviceSKU));
+      setSelectedServices((prev) => prev.filter((s) => s.id !== serviceId));
     } else {
       setSelectedServices((prev) => [...prev, service]);
     }
@@ -108,7 +137,9 @@ const ConsultationForm = () => {
 
   const createContactCRM = async (formDataContact) => {
     setLoadingFetch(true);
-    const service_concern = [...selectedServices].map((item,index)=>(item["Tên gói"]))
+    const service_concern = [...selectedServices].map(
+      (item) => item.name
+    );
     try {
       const response = await fetch(
         "https://christian-jeana-khd-c86f9de4.koyeb.app/crm/create-contact",
@@ -119,7 +150,8 @@ const ConsultationForm = () => {
           },
           body: JSON.stringify({
             area: formDataContact.area,
-            full_name: formDataContact.firstName + " " +formDataContact.lastName,
+            full_name:
+              formDataContact.firstName + " " + formDataContact.lastName,
             email: formDataContact.email,
             phone: formDataContact.phone,
             citizen_identification: "123456789101",
@@ -127,7 +159,7 @@ const ConsultationForm = () => {
             address:
               "800 Wilcrest Dr, Suite 104, Houston, TX, United States, Texas",
             gender: "Nam",
-            is_contributor: 'no',
+            is_contributor: "no",
             service_concern: service_concern,
             affiliate_code: getAffiliateCode(),
           }),
@@ -156,7 +188,7 @@ const ConsultationForm = () => {
               className="img-fluid mb-4 rounded"
               alt="NFT Capital Group Banner"
               style={{ width: "100%" }}
-              onClick={()=> setLoadingFetch(true)}
+              onClick={() => setLoadingFetch(true)}
             />
             <h2 className="mb-4 title-session fs-2">NHẬN TƯ VẤN MIỄN PHÍ</h2>
             <div
@@ -300,17 +332,17 @@ const ConsultationForm = () => {
                     <input
                       type="checkbox"
                       className="form-check-input"
-                      id={`service-${service.SKU}`}
+                      id={`service-${service.id}`}
                       checked={selectedServices.some(
-                        (s) => s.SKU === service.SKU
+                        (s) => s.id === service.id
                       )}
-                      onChange={() => handleServiceToggle(service.SKU)}
+                      onChange={() => handleServiceToggle(service.id)}
                     />
                     <label
                       className="form-check-label"
-                      htmlFor={`service-${service.SKU}`}
+                      htmlFor={`service-${service.id}`}
                     >
-                      {service["Tên gói"]}
+                      {service.name}
                     </label>
                   </div>
                 </div>
@@ -327,7 +359,7 @@ const ConsultationForm = () => {
               <button
                 className="btn btn-primary btn-lg"
                 // onClick={handleSubmitForm}
-                onClick={handleSubmitForm}
+                // onClick={handleSubmitForm}
                 style={{ backgroundColor: "#074379" }}
               >
                 Đăng ký

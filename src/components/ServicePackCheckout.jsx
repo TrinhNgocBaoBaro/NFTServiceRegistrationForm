@@ -51,7 +51,6 @@ const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
                 <th scope="col">Tên gói / Dịch vụ</th>
                 {/* <th scope="col">Mô tả</th> */}
                 <th scope="col">Giá ($)</th>
-                <th scope="col">Kỳ hạn</th>
                 <th scope="col">Nhập số lượng</th>
               </tr>
             </thead>
@@ -68,22 +67,27 @@ const ServicePackCheckout = ({ selected = [], onUpdateSelected }) => {
                   </td>
                   {/* <td>{item["Mô tả"] || "Không có mô tả"}</td> */}
                   <td>
-                    {item.total_invest.toLocaleString("en-US", {
+                    {parseFloat(item.total_invest).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     }) || 0}
                   </td>
-                  <td>{item.profit_type === "monthy" ? "tháng" : "-"}</td>
                   <td>
                     <input
                       type="number"
                       inputMode="numeric"
                       className="form-control"
-                      value={quantities[item.id] || 1}
+                      defaultValue={item.quantity}
                       min={1}
                       onChange={(e) =>
                         handleQuantityChange(item.id, e.target.value)
                       }
+                      onBlur={(e) => {
+                        if (!e.target.value || parseInt(e.target.value) <= 0) {
+                          e.target.value = item.quantity; 
+                          handleQuantityChange(item.id, item.quantity); 
+                        }
+                      }}
                     />
                   </td>
                 </tr>

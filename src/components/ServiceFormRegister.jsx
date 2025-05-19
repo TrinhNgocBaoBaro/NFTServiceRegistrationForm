@@ -84,23 +84,23 @@ const ServiceFormRegister = ({
     //     return false;
     //   }
     // }
-    
 
-// 2. Kiểm tra các combo cần contribute amount
-  const newTouchedFields = {};
-  const invalidCombos = selectedCombo.filter((combo) => {
-    const isInvestmentPackage = combo.investment_type === "investment_package";
-    const amount = contributeAmounts[combo.id];
-    const isInvalid = !amount || parseFloat(amount) < 500;
+    // 2. Kiểm tra các combo cần contribute amount
+    const newTouchedFields = {};
+    const invalidCombos = selectedCombo.filter((combo) => {
+      const isInvestmentPackage =
+        combo.investment_type === "investment_package";
+      const amount = contributeAmounts[combo.id];
+      const isInvalid = !amount || parseFloat(amount) < 500;
 
-    if (isInvestmentPackage && isInvalid) {
-      newTouchedFields[combo.id] = true; // đánh dấu là đã touch để hiển thị lỗi
-      return true;
-    }
+      if (isInvestmentPackage && isInvalid) {
+        newTouchedFields[combo.id] = true; // đánh dấu là đã touch để hiển thị lỗi
+        return true;
+      }
 
-    return false;
-  });
-    
+      return false;
+    });
+
     if (invalidCombos.length > 0) {
       errors.push("Tất cả các khoản đầu tư dạng phải ≥ 500 USD.");
     }
@@ -110,10 +110,10 @@ const ServiceFormRegister = ({
       errors.push("Bạn cần chọn ít nhất một gói dịch vụ hoặc combo.");
     }
 
-      // 4. Set state & kết luận
-  if (Object.keys(newTouchedFields).length > 0) {
-    setTouchedFields((prev) => ({ ...prev, ...newTouchedFields }));
-  }
+    // 4. Set state & kết luận
+    if (Object.keys(newTouchedFields).length > 0) {
+      setTouchedFields((prev) => ({ ...prev, ...newTouchedFields }));
+    }
 
     if (errors.length > 0) {
       setError(true);
@@ -385,11 +385,21 @@ const ServiceFormRegister = ({
               <input
                 type="text"
                 name="cccd"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={12}
                 className={`form-control ${
                   !formDataContact.cccd && error ? "is-invalid" : ""
                 }`}
                 value={formDataContact.cccd}
-                onChange={handleChangeFormDataContact}
+                // onChange={handleChangeFormDataContact}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setFormDataContact((prev) => ({
+                    ...prev,
+                    cccd: value,
+                  }));
+                }}
               />
               <div class="invalid-feedback">Vui lòng nhập đầy đủ.</div>
             </div>
