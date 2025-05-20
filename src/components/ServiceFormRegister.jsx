@@ -13,16 +13,36 @@ const ServiceFormRegister = ({
   formDataContact,
   setFormDataContact,
   serviceData1,
-  searchEmailExist
+  searchEmailExist,
 }) => {
   // const [serviceData1, setServiceData1] = useState([]);
   const [selectedCombo, setSelectedCombo] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [error, setError] = useState(false);
+  const [areaData, setAreaData] = useState([]);
 
   ///////////////////////////////////////
   const [contributeAmounts, setContributeAmounts] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
+
+  const fetchArea = async () => {
+    try {
+      const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/areas/public`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Lỗi khi lấy sản phẩm}`);
+      }
+
+      const data = await response.json();
+      console.log("Area Data: ", data.data);
+
+      setAreaData(data.data);
+    } catch (error) {
+      console.error("Lỗi khi fetch product:", error.message);
+      alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
+    }
+  };
 
   const isInvestmentServiceSelected = (id) => {
     return selectedCombo.some(
@@ -144,6 +164,10 @@ const ServiceFormRegister = ({
       console.log("Form is valid:", formDataContact);
     }
   };
+
+  useEffect(() => {
+    fetchArea();
+  }, []);
 
   useEffect(() => {
     console.log("serviceData1 nè Con: ", serviceData1);
@@ -405,7 +429,9 @@ const ServiceFormRegister = ({
               <div class="invalid-feedback">Vui lòng nhập đầy đủ.</div>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Địa chỉ <span className="text-danger">*</span></label>
+              <label className="form-label">
+                Địa chỉ <span className="text-danger">*</span>
+              </label>
               <input
                 type="text"
                 name="address"
@@ -487,8 +513,11 @@ const ServiceFormRegister = ({
                 Khu vực <span className="text-danger">*</span>
               </label>
               <select
-                className="form-select"
-                // value={formDataContact.area}
+                // className="form-select"
+                className={`form-select ${
+                  !formDataContact.area && error ? "is-invalid" : ""
+                }`}
+                value={formDataContact.area}
                 onChange={(e) =>
                   setFormDataContact({
                     ...formDataContact,
@@ -496,12 +525,14 @@ const ServiceFormRegister = ({
                   })
                 }
               >
-                <option value="20bdc808-bddd-404d-ab75-fe8b60aa0413">
-                  Việt Nam
+                <option value="" disabled>
+                  Vui lòng chọn
                 </option>
-                <option value="505da52e-4d14-46df-9b7d-d093b86cd5ce">
-                  USA
-                </option>
+                {areaData.map((item, index) => (
+                  <option value={item.id} key={index}>
+                    {item.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -610,11 +641,11 @@ const ServiceFormRegister = ({
             {" "}
             Chi tiết các gói / dịch vụ:{" "}
             <a
-              href="https://drive.google.com/file/d/1cOzMenOyJlirqYAMuIuYP-sXhu5z9CLG/view?usp=sharing"
+              href="https://drive.google.com/file/d/13E9MTXLaWx_CnSRQaDVM28cbMDZnobx4/view?usp=sharing"
               target="_blank"
               rel="noreferrer"
             >
-              ServicePack.pdf
+              DanhSachDichVu.pdf
             </a>
           </div>
         </div>

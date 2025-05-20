@@ -29,29 +29,29 @@ function ServiceFormRegisterFlow() {
   const [serviceData, setServiceData] = useState([]);
   const [processingStage, setProcessingStage] = useState("initial");
 
-  const [formDataContact, setFormDataContact] = useState({
-    firstName: "Nguyễn Lê",
-    lastName: "Hữu",
-    dob: "2000-11-02",
-    phone: "+84354187011",
-    cccd: "123456789101",
-    address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
-    email: "nguyenlehuu1102000@gmail.com",
-    gender: "",
-    area: "20bdc808-bddd-404d-ab75-fe8b60aa0413",
-  });
-
-  //   const [formDataContact, setFormDataContact] = useState({
-  //   firstName: "",
-  //   lastName: "",
-  //   dob: "",
-  //   phone: "",
-  //   cccd: "",
-  //   address: "",
-  //   email: "",
+  // const [formDataContact, setFormDataContact] = useState({
+  //   firstName: "Nguyễn Lê",
+  //   lastName: "Hữu",
+  //   dob: "2000-11-02",
+  //   phone: "+84354187011",
+  //   cccd: "123456789101",
+  //   address: "P. Phú Hữu, Quận 9, TP. Thủ Đức",
+  //   email: "nguyenlehuu1102000@gmail.com",
   //   gender: "",
-  //   area: "Việt Nam",
+  //   area: "",
   // });
+
+    const [formDataContact, setFormDataContact] = useState({
+    firstName: "",
+    lastName: "",
+    dob: "",
+    phone: "",
+    cccd: "",
+    address: "",
+    email: "",
+    gender: "",
+    area: "",
+  });
 
   useEffect(() => {
     console.log("Các dịch vụ: ", selectedServices);

@@ -16,13 +16,14 @@ const ConsultationForm = () => {
   const [error, setError] = useState(false);
   const [loadingFetch, setLoadingFetch] = useState(false);
   const [serviceData, setServiceData] = useState([]);
+  const [areaData, setAreaData] = useState([]);
 
   const [formDataContact, setFormDataContact] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    area: "Việt Nam",
+    area: "",
   });
 
   const fetchServiceData = async () => {
@@ -48,12 +49,34 @@ const ConsultationForm = () => {
     }
   };
 
+
+  const fetchArea = async () => {
+    try {
+      const url = `https://christian-jeana-khd-c86f9de4.koyeb.app/areas/public`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Lỗi khi lấy sản phẩm}`);
+      }
+
+      const data = await response.json();
+      console.log("Area Data: ", data.data);
+
+      setAreaData(data.data);
+    } catch (error) {
+      console.error("Lỗi khi fetch product:", error.message);
+      alert("Không thể lấy thông tin sản phẩm. Vui lòng thử lại.");
+    }
+  };
+
+
   useEffect(() => {
     console.log("Các dịch vụ được chọn ở form tư vấn: ", selectedServices);
   }, [selectedServices]);
 
   useEffect(() => {
     fetchServiceData();
+    fetchArea();
   }, []);
 
   const handleChangeFormDataContact = (e) => {
@@ -158,9 +181,9 @@ const ConsultationForm = () => {
             birthday: "1900-01-01",
             address:
               "800 Wilcrest Dr, Suite 104, Houston, TX, United States, Texas",
-            gender: "Nam",
+            gender: "male",
             is_contributor: "no",
-            service_concern: service_concern,
+            // service_concern: service_concern,
             affiliate_code: getAffiliateCode(),
           }),
         }
@@ -308,19 +331,28 @@ const ConsultationForm = () => {
                   <label className="form-label">
                     Khu vực <span className="text-danger">*</span>
                   </label>
-                  <select
-                    className="form-select"
-                    value={formDataContact.area}
-                    onChange={(e) =>
-                      setFormDataContact({
-                        ...formDataContact,
-                        area: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="Việt Nam">Việt Nam</option>
-                    <option value="Texas">Texas</option>
-                  </select>
+  <select
+                // className="form-select"
+                className={`form-select ${
+                  !formDataContact.area && error ? "is-invalid" : ""
+                }`}
+                value={formDataContact.area}
+                onChange={(e) =>
+                  setFormDataContact({
+                    ...formDataContact,
+                    area: e.target.value,
+                  })
+                }
+              >
+                <option value="" disabled>
+                  Vui lòng chọn
+                </option>
+                {areaData.map((item, index) => (
+                  <option value={item.name} key={index}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
                 </div>
               </div>
             </div>
@@ -359,7 +391,7 @@ const ConsultationForm = () => {
               <button
                 className="btn btn-primary btn-lg"
                 // onClick={handleSubmitForm}
-                // onClick={handleSubmitForm}
+                onClick={handleSubmitForm}
                 style={{ backgroundColor: "#074379" }}
               >
                 Đăng ký
